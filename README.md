@@ -1,0 +1,1 @@
+This project was built as part of the Odoo × SPIT Hackathon, where the goal was to design an innovative, scalable, and user-centric solution using the Odoo ecosystem, modern web technologies, and real-world problem statements.
