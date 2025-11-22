@@ -1,18 +1,21 @@
-import React from "react";
 import colors from "../styles/colors";
-import StatBadge from "./StatBadge";
+import StatBadge from "./StatBadge"; 
 import StatsList from "./StatsList";
 
-const DashboardCard = ({ title, badgeCount, badgeLabel, stats }) => (
-  <div style={{
-    backgroundColor: colors.cream,
-    border: `2px solid ${colors.brown}`,
-    borderRadius: '16px',
-    padding: '24px',
-    flex: 1,
-    minWidth: '280px',
-    boxShadow: '0 4px 12px rgba(117, 78, 26, 0.15)'
-  }}>
+const DashboardCard = ({ title, badgeCount, badgeLabel, stats, onClick }) => (
+  <div 
+    onClick={onClick}
+    style={{
+      backgroundColor: colors.cream,
+      border: `2px solid ${colors.brown}`,
+      borderRadius: '16px',
+      padding: '24px',
+      flex: 1,
+      minWidth: '280px',
+      boxShadow: '0 4px 12px rgba(117, 78, 26, 0.15)',
+      cursor: onClick ? "pointer" : "default"
+    }}
+  >
     <h2 style={{
       color: colors.brown,
       fontSize: '20px',
@@ -23,6 +26,7 @@ const DashboardCard = ({ title, badgeCount, badgeLabel, stats }) => (
     }}>
       {title}
     </h2>
+
     <div style={{
       display: 'flex',
       alignItems: 'flex-start',

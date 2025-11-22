@@ -2,17 +2,22 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import DashboardCard from "../components/DashboardCard";
 import colors from "../styles/colors";
+import { useNavigate } from "react-router-dom";
 
 
 export default function Dashboard() {
-  const receiptData = {
+
+    const navigate = useNavigate(); 
+  
+    const receiptData = {
     title: 'Receipt',
     badgeCount: 4,
     badgeLabel: 'to receive',
     stats: [
       { value: 1, label: 'Late', color: '#dc2626' },
       { value: 6, label: 'operations', color: colors.sage }
-    ]
+    ],
+    onClick: () => navigate("/receipts")
   };
 
   const deliveryData = {
@@ -23,7 +28,8 @@ export default function Dashboard() {
       { value: 1, label: 'Late', color: '#dc2626' },
       { value: 2, label: 'waiting', color: colors.gold },
       { value: 6, label: 'operations', color: colors.sage }
-    ]
+    ],
+    onClick: () => navigate("/stock")
   };
 
   return (

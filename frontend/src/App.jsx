@@ -5,6 +5,7 @@ import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import { injectGlobalStyles } from './styles/colors';
+import ReceiptsPage from "./pages/ReceiptsPage";
 import Stock from "./pages/Stock";
 import MoveHistory from "./pages/MoveHistory";
 
@@ -17,6 +18,7 @@ function App() {
         <Route path="/register" element={<Register/>} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/dashboard" element={<Dashboard/>} /> {/* Dashboard route */}
+        <Route path="/receipts" element={<ReceiptsPage />} />
         <Route path="/stock" element={<Stock />} />
         <Route path="/" element={<Dashboard/>} />   {/* Dashboard route */}
         <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Forgot password route */}
