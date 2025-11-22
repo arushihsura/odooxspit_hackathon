@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 const colors = {
@@ -9,6 +10,8 @@ const colors = {
 };
 
 const ReceiptsPage = () => {
+  const navigate = useNavigate();
+  
   const [receipts, setReceipts] = useState([
     { id: 1, reference: "WH/IN/0001", from: "Vendor", to: "WH/Stock1", contact: "Azure Interior", scheduleDate: "", status: "Ready" },
     { id: 2, reference: "WH/IN/0002", from: "Vendor", to: "WH/Stock1", contact: "Azure Interior", scheduleDate: "", status: "Ready" },
@@ -20,6 +23,10 @@ const ReceiptsPage = () => {
       r.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.contact.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleReferenceClick = (receiptId) => {
+    navigate(`/receipt/${receiptId}`);
+  };
 
   const IconButton = ({ children, color = colors.brown }) => (
     <button
@@ -39,155 +46,171 @@ const ReceiptsPage = () => {
 
   return (
     <>
-        <Navbar />
+      <Navbar />
 
-        <main style={{ padding: "32px" }}>
+      <main style={{ padding: "32px" }}>
         <div
-            style={{
+          style={{
             backgroundColor: "white",
             border: `2px solid ${colors.brown}`,
             borderRadius: "16px",
             padding: "24px",
             boxShadow: "0 4px 12px rgba(117, 78, 26, 0.15)",
-            }}
+          }}
         >
-            {/* Header */}
-            <div
+          {/* Header */}
+          <div
             style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-                borderBottom: `2px solid ${colors.sage}`,
-                paddingBottom: "12px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "20px",
+              borderBottom: `2px solid ${colors.sage}`,
+              paddingBottom: "12px",
             }}
-            >
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <button
+              <button
                 style={{
-                    backgroundColor: colors.gold,
-                    color: colors.brown,
-                    border: "none",
-                    padding: "8px 16px",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "600",
+                  backgroundColor: colors.gold,
+                  color: colors.brown,
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600",
                 }}
-                >
+              >
                 NEW
-                </button>
-                <h2
+              </button>
+              <h2
                 style={{
-                    color: colors.brown,
-                    fontSize: "20px",
-                    fontWeight: "600",
-                    margin: 0,
+                  color: colors.brown,
+                  fontSize: "20px",
+                  fontWeight: "600",
+                  margin: 0,
                 }}
-                >
+              >
                 Receipts
-                </h2>
+              </h2>
             </div>
 
             {/* Search + Icons */}
             <div
-                style={{
+              style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                }}
+              }}
             >
-                <div style={{ position: "relative" }}>
+              <div style={{ position: "relative" }}>
                 <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
                     padding: "8px 36px 8px 12px",
                     border: `1px solid ${colors.brown}`,
                     borderRadius: "8px",
                     fontSize: "14px",
                     outline: "none",
-                    }}
+                  }}
                 />
                 <span
-                    style={{
+                  style={{
                     position: "absolute",
                     right: "10px",
                     top: "50%",
                     transform: "translateY(-50%)",
                     color: colors.brown,
-                    }}
+                  }}
                 >
-                    🔍
+                  🔍
                 </span>
-                </div>
+              </div>
 
-                <IconButton>☰</IconButton>
-                <IconButton color="#dc2626">🗑</IconButton>
+              <IconButton>☰</IconButton>
+              <IconButton color="#dc2626">🗑</IconButton>
             </div>
-            </div>
+          </div>
 
-            {/* Table */}
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          {/* Table */}
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-                <tr style={{ borderBottom: `2px solid ${colors.brown}` }}>
+              <tr style={{ borderBottom: `2px solid ${colors.brown}` }}>
                 {["Reference", "From", "To", "Contact", "Schedule Date", "Status"].map((header) => (
-                    <th
+                  <th
                     key={header}
                     style={{
-                        textAlign: "left",
-                        padding: "12px 8px",
-                        color: colors.brown,
-                        fontWeight: "600",
-                        fontSize: "14px",
+                      textAlign: "left",
+                      padding: "12px 8px",
+                      color: colors.brown,
+                      fontWeight: "600",
+                      fontSize: "14px",
                     }}
-                    >
+                  >
                     {header}
-                    </th>
+                  </th>
                 ))}
-                </tr>
+              </tr>
             </thead>
 
             <tbody>
-                {filteredReceipts.map((item) => (
-                <tr key={item.id} style={{ borderBottom: `1px dashed ${colors.sage}` }}>
-                    <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px", fontStyle: "italic" }}>
+              {filteredReceipts.map((item) => (
+                <tr 
+                  key={item.id} 
+                  style={{ borderBottom: `1px dashed ${colors.sage}` }}
+                >
+                  <td 
+                    style={{ 
+                      padding: "12px 8px", 
+                      color: colors.brown, 
+                      fontSize: "14px", 
+                      fontStyle: "italic",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      fontWeight: "600"
+                    }}
+                    onClick={() => handleReferenceClick(item.id)}
+                    onMouseOver={(e) => e.target.style.color = colors.gold}
+                    onMouseOut={(e) => e.target.style.color = colors.brown}
+                  >
                     {item.reference}
-                    </td>
-                    <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>{item.from}</td>
-                    <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>{item.to}</td>
-                    <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>{item.contact}</td>
-                    <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>
+                  </td>
+                  <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>{item.from}</td>
+                  <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>{item.to}</td>
+                  <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>{item.contact}</td>
+                  <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px" }}>
                     {item.scheduleDate || "-"}
-                    </td>
-                    <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px", fontWeight: "500" }}>
+                  </td>
+                  <td style={{ padding: "12px 8px", color: colors.brown, fontSize: "14px", fontWeight: "500" }}>
                     {item.status}
-                    </td>
+                  </td>
                 </tr>
-                ))}
+              ))}
             </tbody>
-            </table>
+          </table>
 
-            {/* Footer */}
-            <div
+          {/* Footer */}
+          <div
             style={{
-                marginTop: "24px",
-                padding: "16px",
-                backgroundColor: colors.cream,
-                borderRadius: "8px",
-                textAlign: "center",
-                color: colors.brown,
-                fontSize: "14px",
+              marginTop: "24px",
+              padding: "16px",
+              backgroundColor: colors.cream,
+              borderRadius: "8px",
+              textAlign: "center",
+              color: colors.brown,
+              fontSize: "14px",
             }}
-            >
+          >
             Populate all work orders added to manufacturing order
             <br />
             <span style={{ fontSize: "12px", color: colors.gold }}>Locations of warehouse: WH/Stock1</span>
-            </div>
+          </div>
         </div>
-        </main>
+      </main>
     </>
   );
 };
