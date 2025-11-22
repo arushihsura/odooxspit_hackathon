@@ -14,7 +14,7 @@ const Navbar = () => {
   const operationsRef = useRef(null);
 
   const items = [
-    { label: "Dashboard", to: "/dashboard" },
+    { label: "Dashboard", to: "/" },
     { label: "Operations", to: "#" },
     { label: "Stock", to: "/stock" },
     { label: "Move History", to: "/move-history" },
