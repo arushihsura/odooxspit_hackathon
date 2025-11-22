@@ -20,7 +20,7 @@ function App() {
         <Route path="/stock" element={<Stock />} />
         <Route path="/" element={<Dashboard/>} />   {/* Dashboard route */}
         <Route path="/forgot-password" element={<ForgotPassword />} /> {/* Forgot password route */}
-        <Route path="/move-history" element={<MoveHistory />} />
+        <Route path="/history" element={<MoveHistory />} />
       </Routes>
     </BrowserRouter>
   );
