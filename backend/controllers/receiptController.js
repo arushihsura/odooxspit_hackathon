@@ -219,11 +219,13 @@ export const deleteReceipt = async (req, res) => {
   }
 };
 
-// GET statistics
+// GET receipt statistics
 export const getReceiptStatistics = async (req, res) => {
   try {
     const total = await Receipt.countDocuments();
-    const pending = await Receipt.countDocuments({ status: { $in: ["DRAFT", "WAITING", "READY"] } });
+    const pending = await Receipt.countDocuments({ 
+      status: { $in: ["DRAFT", "WAITING", "READY"] } 
+    });
     const done = await Receipt.countDocuments({ status: "DONE" });
     
     res.json({ total, pending, done });

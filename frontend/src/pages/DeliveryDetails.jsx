@@ -1,441 +1,358 @@
-import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Plus, Printer, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import axios from 'axios';
+import { injectGlobalStyles } from '../styles/colors';
 
 export default function DeliveryDetails() {
-  const [deliveryData, setDeliveryData] = useState({
-    reference: 'WH/OUT/0001',
-    deliveryAddress: '',
-    scheduleDate: '',
-    responsible: '',
-    operationType: ''
-  });
+  useEffect(() => { injectGlobalStyles(); }, []);
 
-  const [products, setProducts] = useState([
-    { id: 1, name: '[DESK001] Desk', quantity: 6 }
-  ]);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [delivery, setDelivery] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [editMode, setEditMode] = useState(false);
 
-  const [status, setStatus] = useState('Draft');
+  const token = localStorage.getItem("token");
 
-  const handleInputChange = (field, value) => {
-    setDeliveryData(prev => ({ ...prev, [field]: value }));
+  useEffect(() => {
+    if (id) {
+      fetchDelivery();
+    }
+    fetchProducts();
+  }, [id]);
+
+  const fetchDelivery = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/deliveries/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDelivery(res.data);
+      setEditMode(res.data.status === "DRAFT" || res.data.status === "WAITING");
+    } catch (error) {
+      console.error("Error fetching delivery:", error);
+      alert("Failed to load delivery");
+      navigate("/deliveries");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleProductQuantityChange = (id, quantity) => {
-    setProducts(prev => 
-      prev.map(product => 
-        product.id === id ? { ...product, quantity: parseInt(quantity) || 0 } : product
-      )
-    );
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/products", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProducts(res.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  const updateDelivery = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/deliveries/${id}`, delivery, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Delivery updated successfully");
+      fetchDelivery();
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to update delivery");
+    }
+  };
+
+  const validateDelivery = async () => {
+    if (!window.confirm("Validate this delivery? This will decrease stock quantities.")) return;
+    try {
+      await axios.post(`http://localhost:5000/api/deliveries/${id}/validate`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Delivery validated and stock updated!");
+      fetchDelivery();
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to validate delivery");
+    }
+  };
+
+  const cancelDelivery = async () => {
+    if (!window.confirm("Cancel this delivery?")) return;
+    try {
+      await axios.post(`http://localhost:5000/api/deliveries/${id}/cancel`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert("Delivery cancelled");
+      fetchDelivery();
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to cancel delivery");
+    }
+  };
+
+  const updateStatus = async (newStatus) => {
+    try {
+      await axios.put(`http://localhost:5000/api/deliveries/${id}`, { status: newStatus }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchDelivery();
+    } catch (error) {
+      alert(error.response?.data?.error || "Failed to update status");
+    }
   };
 
   const addNewProduct = () => {
-    const newProduct = {
-      id: products.length + 1,
-      name: '',
-      quantity: 0
-    };
-    setProducts([...products, newProduct]);
+    setDelivery({
+      ...delivery,
+      items: [...delivery.items, { product: null, quantityOrdered: 0, quantityDelivered: 0 }]
+    });
   };
 
-  const styles = {
-    pageWrapper: {
-      minHeight: '100vh',
-      backgroundColor: '#F8E1B7'
-    },
-    container: {
-      maxWidth: '1400px',
-      margin: '0 auto',
-      padding: '40px'
-    },
-    header: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '24px 32px',
-      marginBottom: '24px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: '16px'
-    },
-    pageTitle: {
-      fontSize: '28px',
-      fontWeight: '700',
-      color: '#B8592A',
-      margin: 0
-    },
-    newButton: {
-      backgroundColor: '#B6CBBD',
-      color: '#1f2937',
-      padding: '10px 24px',
-      borderRadius: '8px',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '15px',
-      fontWeight: '600',
-      transition: 'all 0.2s'
-    },
-    actionBar: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '20px 32px',
-      marginBottom: '24px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: '16px'
-    },
-    leftButtons: {
-      display: 'flex',
-      gap: '12px',
-      flexWrap: 'wrap'
-    },
-    button: {
-      padding: '10px 20px',
-      borderRadius: '8px',
-      border: '2px solid #B8592A',
-      cursor: 'pointer',
-      fontSize: '15px',
-      fontWeight: '600',
-      transition: 'all 0.2s',
-      backgroundColor: 'white',
-      color: '#B8592A'
-    },
-    statusBar: {
-      display: 'flex',
-      gap: '12px',
-      alignItems: 'center'
-    },
-    statusBadge: {
-      padding: '8px 20px',
-      borderRadius: '8px',
-      fontSize: '14px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s'
-    },
-    statusDraft: {
-      backgroundColor: '#FEF3C7',
-      color: '#92400E',
-      border: '2px solid #F59E0B'
-    },
-    statusWaiting: {
-      backgroundColor: '#DBEAFE',
-      color: '#1E40AF',
-      border: '2px solid #3B82F6'
-    },
-    statusReady: {
-      backgroundColor: '#D1FAE5',
-      color: '#065F46',
-      border: '2px solid #10B981'
-    },
-    statusDone: {
-      backgroundColor: '#E0E7FF',
-      color: '#3730A3',
-      border: '2px solid #6366F1'
-    },
-    detailsCard: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '32px',
-      marginBottom: '24px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-    },
-    reference: {
-      fontSize: '22px',
-      fontWeight: '700',
-      color: '#B8592A',
-      marginBottom: '32px'
-    },
-    formGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '24px',
-      marginBottom: '32px'
-    },
-    formGroup: {
-      display: 'flex',
-      flexDirection: 'column'
-    },
-    label: {
-      fontSize: '14px',
-      fontWeight: '600',
-      color: '#B8592A',
-      marginBottom: '8px'
-    },
-    input: {
-      width: '100%',
-      padding: '12px 16px',
-      border: '2px solid #B8592A',
-      borderRadius: '0',
-      fontSize: '15px',
-      outline: 'none',
-      transition: 'border-color 0.2s',
-      boxSizing: 'border-box',
-      backgroundColor: 'white'
-    },
-    select: {
-      width: '100%',
-      padding: '12px 16px',
-      border: '2px solid #B8592A',
-      borderRadius: '0',
-      fontSize: '15px',
-      outline: 'none',
-      backgroundColor: 'white',
-      cursor: 'pointer',
-      boxSizing: 'border-box'
-    },
-    sectionTitle: {
-      fontSize: '20px',
-      fontWeight: '700',
-      color: '#B8592A',
-      marginBottom: '20px',
-      paddingBottom: '12px',
-      borderBottom: '2px solid #B8592A'
-    },
-    productsTable: {
-      width: '100%',
-      borderCollapse: 'collapse',
-      marginBottom: '20px'
-    },
-    tableHeader: {
-      borderBottom: '2px solid #B8592A'
-    },
-    th: {
-      padding: '12px 16px',
-      textAlign: 'left',
-      fontSize: '14px',
-      fontWeight: '600',
-      color: '#B8592A'
-    },
-    td: {
-      padding: '16px',
-      fontSize: '15px',
-      color: '#374151',
-      borderBottom: '1px solid #F3E5D5'
-    },
-    productName: {
-      color: '#B8592A',
-      fontWeight: '500'
-    },
-    quantityInput: {
-      width: '80px',
-      padding: '8px 12px',
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
-      fontSize: '15px',
-      outline: 'none',
-      textAlign: 'center'
-    },
-    addProductButton: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      padding: '10px 20px',
-      backgroundColor: 'white',
-      color: '#B8592A',
-      border: '2px solid #B8592A',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontSize: '15px',
-      fontWeight: '600',
-      transition: 'all 0.2s'
+  const updateItem = (index, field, value) => {
+    const updated = [...delivery.items];
+    updated[index][field] = value;
+    setDelivery({ ...delivery, items: updated });
+  };
+
+  const removeItem = (index) => {
+    setDelivery({
+      ...delivery,
+      items: delivery.items.filter((_, i) => i !== index)
+    });
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Loading delivery...</p>
+        </div>
+      </>
+    );
+  }
+
+  if (!delivery) {
+    return (
+      <>
+        <Navbar />
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <p>Delivery not found</p>
+        </div>
+      </>
+    );
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'DRAFT': return { bg: '#FEF3C7', color: '#92400E', border: '#F59E0B' };
+      case 'WAITING': return { bg: '#E0E7FF', color: '#3730A3', border: '#6366F1' };
+      case 'READY': return { bg: '#DBEAFE', color: '#1E40AF', border: '#3B82F6' };
+      case 'DONE': return { bg: '#D1FAE5', color: '#065F46', border: '#10B981' };
+      case 'CANCELLED': return { bg: '#FEE2E2', color: '#991B1B', border: '#EF4444' };
+      default: return { bg: '#F3F4F6', color: '#374151', border: '#9CA3AF' };
     }
   };
 
   return (
     <>
       <Navbar />
-      <div style={styles.pageWrapper}>
-        <div style={styles.container}>
+      <div style={{ minHeight: '100vh', background: 'var(--cream)', padding: '40px' }}>
+        <div className="container" style={{ maxWidth: 1400 }}>
           {/* Header */}
-          <div style={styles.header}>
-            <h1 style={styles.pageTitle}>Delivery</h1>
-            <button 
-              style={styles.newButton}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#a3baa9'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#B6CBBD'}
-            >
-              New
-            </button>
+          <div className="card" style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--brown)', margin: 0 }}>Delivery Order</h1>
+              <button className="btn btn-primary" onClick={() => navigate("/deliveries/new")}>
+                New
+              </button>
+            </div>
           </div>
 
           {/* Action Bar */}
-          <div style={styles.actionBar}>
-            <div style={styles.leftButtons}>
-              <button 
-                style={styles.button}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#B8592A';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.color = '#B8592A';
-                }}
-              >
-                Validate
-              </button>
-              <button 
-                style={styles.button}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#B8592A';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.color = '#B8592A';
-                }}
-              >
-                Print
-              </button>
-              <button 
-                style={styles.button}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#B8592A';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white';
-                  e.currentTarget.style.color = '#B8592A';
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+          <div className="card" style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+              <div style={{ display: 'flex', gap: 12 }}>
+                {delivery.status !== "DONE" && delivery.status !== "CANCELLED" && (
+                  <>
+                    <button className="btn btn-primary" onClick={validateDelivery}>
+                      Validate
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => window.print()}>
+                      <Printer size={16} /> Print
+                    </button>
+                    <button className="btn btn-cancel" onClick={cancelDelivery}>
+                      <X size={16} /> Cancel
+                    </button>
+                  </>
+                )}
+              </div>
 
-            <div style={styles.statusBar}>
-              <span 
-                style={{...styles.statusBadge, ...styles.statusDraft}}
-                onClick={() => setStatus('Draft')}
-              >
-                Draft
-              </span>
-              <span style={{ color: '#B8592A', fontSize: '18px' }}>{'>'}</span>
-              <span 
-                style={{...styles.statusBadge, ...styles.statusWaiting}}
-                onClick={() => setStatus('Waiting')}
-              >
-                Waiting
-              </span>
-              <span style={{ color: '#B8592A', fontSize: '18px' }}>{'>'}</span>
-              <span 
-                style={{...styles.statusBadge, ...styles.statusReady}}
-                onClick={() => setStatus('Ready')}
-              >
-                Ready
-              </span>
-              <span style={{ color: '#B8592A', fontSize: '18px' }}>{'>'}</span>
-              <span 
-                style={{...styles.statusBadge, ...styles.statusDone}}
-                onClick={() => setStatus('Done')}
-              >
-                Done
-              </span>
+              {/* Status Flow */}
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                {['DRAFT', 'WAITING', 'READY', 'DONE'].map((status, idx) => (
+                  <React.Fragment key={status}>
+                    <span
+                      style={{
+                        padding: '8px 20px',
+                        borderRadius: 8,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: delivery.status !== 'DONE' && delivery.status !== 'CANCELLED' ? 'pointer' : 'default',
+                        backgroundColor: getStatusColor(status).bg,
+                        color: getStatusColor(status).color,
+                        border: `2px solid ${getStatusColor(status).border}`,
+                        opacity: delivery.status === status ? 1 : 0.5
+                      }}
+                      onClick={() => {
+                        if (delivery.status !== 'DONE' && delivery.status !== 'CANCELLED') {
+                          updateStatus(status);
+                        }
+                      }}
+                    >
+                      {status}
+                    </span>
+                    {idx < 3 && <span style={{ color: 'var(--brown)', fontSize: 18 }}>{'>'}</span>}
+                  </React.Fragment>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Details Card */}
-          <div style={styles.detailsCard}>
-            <div style={styles.reference}>{deliveryData.reference}</div>
+          <div className="card">
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--brown)', marginBottom: 32 }}>
+              {delivery.reference}
+            </div>
 
-            <div style={styles.formGrid}>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Delivery Address</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 32 }}>
+              <div className="profile-field">
+                <label className="profile-label">Delivery Address</label>
                 <input
-                  type="text"
-                  value={deliveryData.deliveryAddress}
-                  onChange={(e) => handleInputChange('deliveryAddress', e.target.value)}
-                  style={styles.input}
-                  placeholder=""
+                  className="input"
+                  value={delivery.deliveryAddress || ''}
+                  onChange={(e) => setDelivery({ ...delivery, deliveryAddress: e.target.value })}
+                  disabled={!editMode}
                 />
               </div>
 
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Schedule Date</label>
+              <div className="profile-field">
+                <label className="profile-label">Schedule Date</label>
                 <input
                   type="date"
-                  value={deliveryData.scheduleDate}
-                  onChange={(e) => handleInputChange('scheduleDate', e.target.value)}
-                  style={styles.input}
+                  className="input"
+                  value={delivery.scheduleDate ? new Date(delivery.scheduleDate).toISOString().split('T')[0] : ''}
+                  onChange={(e) => setDelivery({ ...delivery, scheduleDate: e.target.value })}
+                  disabled={!editMode}
                 />
               </div>
 
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Responsible</label>
+              <div className="profile-field">
+                <label className="profile-label">Responsible</label>
                 <input
-                  type="text"
-                  value={deliveryData.responsible}
-                  onChange={(e) => handleInputChange('responsible', e.target.value)}
-                  style={styles.input}
-                  placeholder=""
+                  className="input"
+                  value={delivery.responsible || ''}
+                  onChange={(e) => setDelivery({ ...delivery, responsible: e.target.value })}
+                  disabled={!editMode}
                 />
               </div>
 
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Operation Type</label>
+              <div className="profile-field">
+                <label className="profile-label">Operation Type</label>
                 <select
-                  value={deliveryData.operationType}
-                  onChange={(e) => handleInputChange('operationType', e.target.value)}
-                  style={styles.select}
+                  className="select"
+                  value={delivery.operationType}
+                  onChange={(e) => setDelivery({ ...delivery, operationType: e.target.value })}
+                  disabled={!editMode}
                 >
-                  <option value="">Select Operation Type</option>
-                  <option value="delivery">Delivery</option>
-                  <option value="pickup">Pickup</option>
-                  <option value="return">Return</option>
+                  <option value="DELIVERY">Delivery</option>
+                  <option value="PICKUP">Pickup</option>
+                  <option value="RETURN">Return</option>
                 </select>
               </div>
             </div>
 
             {/* Products Section */}
-            <div style={styles.sectionTitle}>Products</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brown)', marginBottom: 20, paddingBottom: 12, borderBottom: '2px solid var(--brown)' }}>
+              Products
+            </div>
 
-            <table style={styles.productsTable}>
-              <thead style={styles.tableHeader}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20 }}>
+              <thead style={{ background: 'var(--brown)' }}>
                 <tr>
-                  <th style={styles.th}>Product</th>
-                  <th style={styles.th}>Quantity</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontWeight: 600, fontSize: 14 }}>
+                    Product
+                  </th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontWeight: 600, fontSize: 14 }}>
+                    Quantity Ordered
+                  </th>
+                  {delivery.status === 'DONE' && (
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontWeight: 600, fontSize: 14 }}>
+                      Quantity Delivered
+                    </th>
+                  )}
+                  {editMode && (
+                    <th style={{ padding: '12px 16px', textAlign: 'left', color: 'white', fontWeight: 600, fontSize: 14 }}>
+                      Actions
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td style={{...styles.td, ...styles.productName}}>
-                      {product.name}
+                {delivery.items.map((item, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid var(--cream)' }}>
+                    <td style={{ padding: '16px', color: 'var(--brown)', fontWeight: 500 }}>
+                      {editMode ? (
+                        <select
+                          className="select"
+                          value={item.product?._id || ''}
+                          onChange={(e) => updateItem(idx, 'product', e.target.value)}
+                        >
+                          <option value="">Select Product</option>
+                          {products.map(p => (
+                            <option key={p._id} value={p._id}>{p.name} (Available: {p.freeToUse})</option>
+                          ))}
+                        </select>
+                      ) : (
+                        item.product?.name || '-'
+                      )}
                     </td>
-                    <td style={styles.td}>
+                    <td style={{ padding: '16px' }}>
                       <input
                         type="number"
-                        value={product.quantity}
-                        onChange={(e) => handleProductQuantityChange(product.id, e.target.value)}
-                        style={styles.quantityInput}
-                        min="0"
+                        className="input"
+                        value={item.quantityOrdered}
+                        onChange={(e) => updateItem(idx, 'quantityOrdered', Number(e.target.value))}
+                        disabled={!editMode}
+                        style={{ width: 100, textAlign: 'center' }}
                       />
                     </td>
+                    {delivery.status === 'DONE' && (
+                      <td style={{ padding: '16px', fontWeight: 600, color: '#ef4444' }}>
+                        {item.quantityDelivered} {item.product?.unit}
+                      </td>
+                    )}
+                    {editMode && (
+                      <td style={{ padding: '16px' }}>
+                        <button className="btn btn-cancel" onClick={() => removeItem(idx)} style={{ padding: '6px 10px' }}>
+                          <X size={14} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <button 
-              style={styles.addProductButton}
-              onClick={addNewProduct}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#B8592A';
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.color = '#B8592A';
-              }}
-            >
-              <Plus size={18} />
-              Add New Product
-            </button>
+            {editMode && (
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-secondary" onClick={addNewProduct}>
+                  <Plus size={18} /> New Product
+                </button>
+                <button className="btn btn-primary" onClick={updateDelivery}>
+                  Save Changes
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
