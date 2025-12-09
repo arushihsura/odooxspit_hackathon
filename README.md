@@ -1,4 +1,4 @@
-# 📦 StockMaster — Inventory Management System (MERN)
+# 📦 StockMaster : Inventory Management System (MERN)
 
 StockMaster is a **MERN-based Inventory Management System (IMS)** designed to digitize and streamline stock operations for businesses. It replaces manual registers and Excel sheets with a **centralized, real-time, role-based** inventory control platform.
 
